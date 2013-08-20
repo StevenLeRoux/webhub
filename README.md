@@ -1,9 +1,11 @@
-webhub
+#WebHub
 ======
 
-Reverse Proxy Management
+WebHub is a lightweight set of tool to manage your different vhosts among different reverse proxies (rpxy) and among different environnments.
 
-# WebHub.conf
+It provides and abstraction database of vhost (WebHub.conf) which makes possible to generate configurations for different rpxy technologies.
+
+## WebHub.conf
 ```
 node      nd-1     pool-dc1
 node      nd-2     pool-dc2
