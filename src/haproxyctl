@@ -1,0 +1,121 @@
+#!/bin/bash
+#
+# haproxy
+#
+#
+# chkconfig: 2345 12 88
+# description: HAProxy is powering awh.
+### BEGIN INIT INFO
+# Provides: $haproxy
+### END INIT INFO
+
+# Source function library.
+. /etc/init.d/functions
+
+# set up the awh node name here
+HAPHOST="FILL_YOURS"
+
+HAPHOST_BIN="/opt/haproxy/bin/haproxy"
+CPP="/usr/bin/cpp"
+RETVAL=0
+
+
+HAPROXY_CONFDIR="/opt/haproxy/etc"
+HAPROXY_CONF="$HAPROXY_CONFDIR/haproxy.conf"
+HAPROXY_TESTCONF="/dev/shm/haproxy.conf"
+HAPROXY_CPP="$HAPROXY_CONFDIR/haproxy.cpp"
+HAPROXY_OPTIONS="-q -p /var/run/haproxy.pid -L $HAPHOST"
+HAPROXY_RELOAD="-sf" #gracefull reload ; use 'st' instead of 'sf' if you dare breaking sessions
+
+buildConf() {
+        # Source config
+        if [ "$1" == "testing" ] ; then
+		HAPROXY_CONF="$HAPROXY_TESTCONF"
+        fi
+        if [ -f $HAPROXY_CPP ] ; then
+ 		echo -n $"Building config... "
+                $CPP -P -C -I$HAPROXY_CONFDIR/$HAPHOST -I$HAPROXY_CONFDIR/backend -I$HAPROXY_CONFDIR/frontend -o $HAPROXY_CONF $HAPROXY_CPP
+ 		echo  $"Done !"
+        else
+                exit 6
+        fi
+}
+
+start() {
+	[ -x $HAPROXY_BIN ] || exit 5
+
+	buildConf
+
+ 	echo -n $"Starting haproxy: "
+	daemon $HAPHOST_BIN -f $HAPROXY_CONF $HAPROXY_OPTIONS
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/haproxy
+	return $RETVAL
+}	
+stop() {
+	echo -n $"Shutting down haproxy: "
+	killproc haproxy
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/haproxy
+	return $RETVAL
+}
+hastatus() {
+	status haproxy
+}
+restart() {
+	stop
+	start
+}
+configtest() {
+        buildConf testing
+	$HAPHOST_BIN -c -q -f $HAPROXY_TESTCONF
+}	
+reload()  {
+    buildConf
+    RETVAL=1
+    hapid=`cat /var/run/haproxy.pid 2>/dev/null`
+    echo -n "Reloading haproxy..."
+    if [ -n "${hapid}" ] && [ -e /proc/"${hapid}" ]; then
+	echo "$HAPHOST_BIN -f $HAPROXY_CONF $HAPROXY_OPTIONS $HAPROXY_RELOAD $hapid;"
+	$HAPHOST_BIN -f $HAPROXY_CONF $HAPROXY_OPTIONS $HAPROXY_RELOAD $hapid;
+	RETVAL=$?
+    fi
+    if [ $RETVAL -ne 0 ]; then
+	failure
+    else
+	success
+    fi
+    echo
+    return $RETVAL
+}
+case "$1" in
+  start)
+  	start
+	;;
+  stop)
+  	stop
+	;;
+  status)
+  	hastatus
+	;;
+  configtest)
+  	configtest
+	;;
+  restart)
+  	restart
+	;;
+  reload)
+	reload
+	;;
+  build)
+	buildConf
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|status|restart|reload|configtest|build}"
+	exit 2
+esac
+
+exit $?
+
