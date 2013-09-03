@@ -1223,7 +1223,7 @@ for aps in sitemap.keys():
       cf_backend.write("  option redispatch\n")
       cf_backend.write("  retries 1\n")
       cf_backend.write("  cookie JSESSIONID preserve indirect\n")
-      cf_backend.write("  stick-table type string len 40 size 5M expire 30m\n")
+      cf_backend.write("  stick-table type string len 40 size 5M expire 30m peers %s\n" % env)
       cf_backend.write("  stick store-response set-cookie(JSESSIONID) table bk_%s\n" % siteid)
       cf_backend.write("  stick on cookie(JSESSIONID) table bk_%s\n" % siteid)
       cf_backend.write("  stick on url_param(JSESSIONID) table bk_%s\n" % siteid)
