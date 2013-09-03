@@ -32,7 +32,7 @@ if not have_json:
 version = "$Revision: 1.55 $"
 cfversion = ""
 gents = time.time()
-
+env = sys.argv[1]
 
 ###
 ### Fowler Noll Vo 1a 64 bits
@@ -124,6 +124,12 @@ disabledaphosts = []
 appool = {}
 
 #
+# Address list of aphost for peers 
+#
+
+aphipbyhost = {}
+
+#
 # List of valid tcsvc (Tomcat services) with associated tchost (Tomcat host)
 #
 
@@ -152,7 +158,7 @@ tcsvcip = {}
 
 apre =   re.compile(r"^apache\s+([^\s]+)-(80|443|8080|8443)\s+(http://(ap-[0-9]+):(8080|8443)/)\s*(#.*)?$")
 tcre =   re.compile(r"^tomcat\s+([^\s]+)-(80|443|8080|8443)\s+(http://([a-z0-9-]+)@(tc-[0-9]+):(4[0-9]{4})(/[a-zA-Z0-9./-]*))(\s+([1-9]|[1-9][0-9]|100))*\s*(#.*)?$")
-aphostre =   re.compile(r"^apachehost\s+(aphost-[0-9]+)\s+([a-z0-9\.-]+)\s*(OFF)?\s*(#.*)?$")
+aphostre =   re.compile(r"^apachehost\s+(aphost-[0-9]+)\s+([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\s+([a-z0-9\.-]+)\s*(OFF)?\s*(#.*)?$")
 #tchostre =   re.compile(r"^tomcathost\s+(tchost-[0-9]+)\s+([a-z0-9.-]+)\s*(#.*)?$")
 apgensvcre =  re.compile(r"^apachegeneric\s+(ap-[0-9]+)\s+(aphost-[0-9]+)\s*(#.*)?$")
 apsvcre =  re.compile(r"^apacheservice\s+(ap-[0-9]+)\s+([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\s+(aphost-[0-9]+)\s*(#.*)?$")
@@ -358,6 +364,12 @@ for line in sys.stdin:
       error = True
     else:
       appool[aph] = app
+
+    if aphipbyhost.has_key(aph):
+      print >> sys.stderr, lineno,"ERROR","aphost=",aph,"already has an IP defined."
+      error = True
+    else:
+      aphipbyhost[aph] = aphip
     
   #
   # Append the aphost to the list of disabled aphosts if 'disabled' was specified
@@ -897,11 +909,11 @@ for site in set(sites):
     #print "  ",tcsvc
 #   tchosts.append(tchost[tcsvc])
     tcpools.append(tcpool[tcsvc])
-  if sys.argv[1] in ( "sample-env" , "production" ):
+  if env in ( "sample-env" , "production" ):
     if len(set(appools)) < 2:
       print >> sys.stderr, "WARNING, site=",site,"is assigned to only one Apache pool."
   if len(set(tcpools)) < 2:
-    if sys.argv[1] in ( "sample-env" , "production" ):
+    if env in ( "sample-env" , "production" ):
       print >> sys.stderr, "WARNING, site=",site,"is assigned to only one Tomcat pool."
     tcnok += 1
 
@@ -1093,9 +1105,10 @@ ha_template.write("  compression type application/pkix-attr-cert\n")
 ha_template.write("  compression type application/x-git-upload-pack-advertisement\n")
 ha_template.write("  compression type image/x-icon\n")
 ha_template.write("  default-server maxconn 1000 maxqueue 1000 inter 5s fastinter 200 downinter 30s rise 3 fall 2 slowstart 1s\n\n")
+ha_template.write("  peers %s\n" % env)
+for apachehost in aphipbyhost.keys():
+  ha_template.write("    peer %s:1024\n" % aphipbyhost[apachehost])
 
-
-  
 # Create a config file for a site on each aphost it is assigned to (via)
 #lbid = 0
 
@@ -1112,7 +1125,7 @@ for aps in sitemap.keys():
       apstype = 'unique'
       site = sitemap[aps][apport][0]
       fid = FNV1a(site)
-#    info["env"] = sys.argv[1]
+#    info["env"] = env
 #    info["url"] = "http://"+site
 #    apaches = []
 #    tomcats = []
@@ -1135,17 +1148,8 @@ for aps in sitemap.keys():
     cf_frontend.write("  acl p-url_statics  path_end -i .mp4 .avi .mpg .mpeg .mpv .mkv .dv .mov .wmv .flv .f4v .fla .mpga .aif .vob .ogg\n")
     cf_frontend.write("  acl p-url_static_  path_sub -i _static_ .cache.\n")
     cf_frontend.write("  acl p-nocache      path_sub -i .nocache.\n")
- #   cf_frontend.write("  acl p-nocache      path_end -i .do .jsp .php .asp .pl .py .rb\n")
     cf_frontend.write("  rsprep ^Server:.* Server:\ awh\n")
     cf_frontend.write("  rspadd Vary:\ User-Agent\n")
-#    cf_frontend.write("  stick-table type integer size 1\n")
-#    cf_frontend.write("  tcp-request content track-sc0 always_true if p-url_statics !p-nocache !p-url_static_\n")
-#    cf_frontend.write("  tcp-request content track-sc1 always_true if p-url_static_ !p-nocache\n")
-#    cf_frontend.write("  tcp-request content track-sc2 always_true if p-nocache\n")
-#    cf_frontend.write("  http-response set-header Cache-Control no-store,no-cache unless { sc0_tracked or sc1_tracked or sc2_tracked }\n")
-#    cf_frontend.write("  http-response set-header Cache-Control no-cache=\"Set-Cookie,Set-Cookie2\",max-age=604800 if { sc0_tracked }\n")
-#    cf_frontend.write("  http-response set-header Cache-Control no-cache=\"Set-Cookie,Set-Cookie2\",max-age=31536000 if { sc1_tracked }\n")
-#    cf_frontend.write("  http-response set-header Cache-Control no-store,no-cache,max-age=0,must-revalidate  if { sc2_tracked  }\n")
     cf_frontend.write("  rspidel ^Etag\n")
     for site in sitemap[aps][apport]:
       alias = 0
@@ -1227,7 +1231,6 @@ for aps in sitemap.keys():
       tcid = 0
       for tcs in tcsvcsbysite[site]:
         tcid += 1
-        cf_backend.write("  rspadd X-AWH-Fred:\ %s  if { srv_id %s }\n" % ("nc\ " + tcsvcip[tcs] + "\ " + tcportbysite[site],tcid))
         cf_backend.write("  rspadd X-AWH-Route:\ %s  if { srv_id %s }\n" % (tcroutebytc[tcs + ":" + tcportbysite[site]],tcid))
         cf_backend.write("  rspadd X-AWH-Worker:\ %s  if { srv_id %s }\n" % (tcsvcip[tcs],tcid))
         cf_backend.write("  http-response set-header Cache-Control no-store,no-cache\n")

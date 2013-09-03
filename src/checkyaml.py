@@ -206,6 +206,7 @@ apgensvc = {}
 aphostgensvc = {}
 disabledaphosts = []
 appool = {}
+aphipbyhost = {}
 #tchost = {}
 tcpool = {}
 apsvcip = {}
@@ -223,7 +224,7 @@ tciplist = []
 apre =       re.compile(r"^apache\s+([^\s]+)-(80|443|8080|8443)\s+(http://(ap-[0-9]+):(8080|8443)/)\s*(#.*)?$")
 tcre =       re.compile(r"^tomcat\s+([^\s]+)-(80|443|8080|8443)\s+(http://([a-zA-Z0-9.-]+)@(tc-[0-9]+):(4[0-9]{4})(/[a-zA-Z0-9./-]*))(\s+([1-9]|[1-9][0-9]|100))*\s*(#.*)?$")
 #tcre =       re.compile(r"^tomcat\s+([^\s]+)-(80|443|8080|8443)\s+(http://([a-z0-9-]+)@(tc-[0-9]+):(4[0-9]{4})(/[a-zA-Z0-9./-]*))(\s+([1-9]|[1-9][0-9]|100))*\s*(#.*)?$")
-aphostre =   re.compile(r"^apachehost\s+(aphost-[0-9]+)\s+([a-z0-9\.-]+)\s*(OFF)?\s*(#.*)?$")
+aphostre =   re.compile(r"^apachehost\s+(aphost-[0-9]+)\s+([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\s+([a-z0-9\.-]+)\s*(OFF)?\s*(#.*)?$")
 #tchostre =   re.compile(r"^tomcathost\s+(tchost-[0-9]+)\s+([a-z0-9.-]+)\s*(#.*)?$")
 apgensvcre =    re.compile(r"^apachegeneric\s+(ap-[0-9]+)\s+(aphost-[0-9]+)\s*(#.*)?$")
 apsvcre =    re.compile(r"^apacheservice\s+(ap-([0-9]+))\s+([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\s+(aphost-[0-9]+)\s*(#.*)?$")
@@ -297,6 +298,12 @@ for line in whconf:
       error = True
     else:
       appool[aph] = app
+
+    if aphipbyhost.has_key(aph):
+      print >> sys.stderr, lineno,"ERROR","aphost=",aph,"already has an IP defined."
+      error = True
+    else:
+      aphipbyhost[aph] = aphip
 
     #
     # Append the aphost to the list of disabled aphosts if 'disabled' was specified
