@@ -1105,9 +1105,9 @@ ha_template.write("  compression type application/pkix-attr-cert\n")
 ha_template.write("  compression type application/x-git-upload-pack-advertisement\n")
 ha_template.write("  compression type image/x-icon\n")
 ha_template.write("  default-server maxconn 1000 maxqueue 1000 inter 5s fastinter 200 downinter 30s rise 3 fall 2 slowstart 1s\n\n")
-ha_template.write("  peers %s\n" % env)
+ha_template.write("peers %s\n" % env)
 for apachehost in aphipbyhost.keys():
-  ha_template.write("    peer %s %s:1024\n" % (apachehost,aphipbyhost[apachehost]))
+  ha_template.write("  peer %s %s:1024\n" % (apachehost,aphipbyhost[apachehost]))
 
 # Create a config file for a site on each aphost it is assigned to (via)
 #lbid = 0
