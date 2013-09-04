@@ -1,6 +1,6 @@
 #WebHub
 
-WebHub is a lightweight set of tool to manage your different vhosts among different reverse proxies (rpxy) and among different environnments.
+WebHub is a lightweight set of tool to manage your different vhosts among different reverse proxies (rpxy) and among different environnments. This means you can deal with a multi-tenancy rpxy infrastructure.
 
 It provides and abstraction database of vhost (WebHub.conf) which makes possible to generate configurations for different rpxy technologies.
 
