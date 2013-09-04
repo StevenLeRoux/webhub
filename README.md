@@ -57,12 +57,6 @@ backend     sample2.apps.domain.tld-8080    http://40001tc4@tc-4:40001/lb.jsp
 
 ```
 
-### Detailed formats
-
-#### key:criterion
-
-#### VAR:condition
-
 ### Todo
 
 #### Browser Cache
@@ -84,5 +78,9 @@ cache       sample.apps.domain.tld-8080    "^.*\.file_extention$"       public  
 ...
 
 ````
+
+#### key:criterion
+
+#### VAR:condition
 
 
