@@ -70,7 +70,7 @@ restart() {
 }
 configtest() {
         buildConf testing
-	$HAPHOST_BIN -c -q -f $HAPROXY_TESTCONF
+	$HAPHOST_BIN -c -q -L $HAPHOST -f $HAPROXY_TESTCONF
 }	
 reload()  {
     buildConf
