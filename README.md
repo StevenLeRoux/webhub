@@ -72,9 +72,13 @@ So you have three cache profiles :
 
 ```
 cache       sample.apps.domain.tld-8080    default   // use default cache profile
+````
 or
+````
 nocache     sample.apps.domain.tld-8080    on
+````
 or
+````
 nocache     sample.apps.domain.tld-8080    on
 cache       sample.apps.domain.tld-8080    "^.*\.file_extention$"       public  7200
 ...
