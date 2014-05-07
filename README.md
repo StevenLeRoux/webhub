@@ -4,6 +4,10 @@ WebHub is a lightweight set of tool to manage your different vhosts among differ
 
 It provides and abstraction database of vhost (WebHub.conf) which makes possible to generate configurations for different rpxy technologies.
 
+## Reverse Proxy Support
+Since the config format is agnostic, one can generate any reverse proxy configuration. For now, we generate a HAProxy config file.
+
+
 ## WebHub.conf
 ```
 version ...
